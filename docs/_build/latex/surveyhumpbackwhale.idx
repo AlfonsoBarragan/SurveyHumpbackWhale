@@ -1,0 +1,10 @@
+\indexentry{SurveyHumpbackWhale (module)@\spxentry{SurveyHumpbackWhale}\spxextra{module}|hyperpage}{1}
+\indexentry{combine\_comment\_columns() (in module SurveyHumpbackWhale)@\spxentry{combine\_comment\_columns()}\spxextra{in module SurveyHumpbackWhale}|hyperpage}{1}
+\indexentry{comment\_columns\_detector() (in module SurveyHumpbackWhale)@\spxentry{comment\_columns\_detector()}\spxextra{in module SurveyHumpbackWhale}|hyperpage}{1}
+\indexentry{create\_and\_poblate\_new\_columns() (in module SurveyHumpbackWhale)@\spxentry{create\_and\_poblate\_new\_columns()}\spxextra{in module SurveyHumpbackWhale}|hyperpage}{1}
+\indexentry{list\_to\_num\_dict() (in module SurveyHumpbackWhale)@\spxentry{list\_to\_num\_dict()}\spxextra{in module SurveyHumpbackWhale}|hyperpage}{1}
+\indexentry{make\_new\_columns\_from\_answers() (in module SurveyHumpbackWhale)@\spxentry{make\_new\_columns\_from\_answers()}\spxextra{in module SurveyHumpbackWhale}|hyperpage}{1}
+\indexentry{map\_answers\_to\_categories() (in module SurveyHumpbackWhale)@\spxentry{map\_answers\_to\_categories()}\spxextra{in module SurveyHumpbackWhale}|hyperpage}{2}
+\indexentry{smart\_answers\_sort() (in module SurveyHumpbackWhale)@\spxentry{smart\_answers\_sort()}\spxextra{in module SurveyHumpbackWhale}|hyperpage}{2}
+\indexentry{smart\_digit\_conversion() (in module SurveyHumpbackWhale)@\spxentry{smart\_digit\_conversion()}\spxextra{in module SurveyHumpbackWhale}|hyperpage}{2}
+\indexentry{traduce\_survey\_with\_dictionary() (in module SurveyHumpbackWhale)@\spxentry{traduce\_survey\_with\_dictionary()}\spxextra{in module SurveyHumpbackWhale}|hyperpage}{2}

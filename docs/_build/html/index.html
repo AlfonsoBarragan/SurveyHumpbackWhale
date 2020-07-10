@@ -1,0 +1,309 @@
+
+
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Welcome to SurveyHumpbackWhale’s documentation! &#8212; SurveyHumpbackWhale 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/greenblue.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/local_fonts.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="_static/jquery.cookie.js"></script>
+    <script src="_static/p_sphinx_theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head><body>
+      <div class="relbar-top">
+            
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+      <li><a href="#">SurveyHumpbackWhale 1.0.0 documentation</a> &#187;</li>
+ 
+      </ul>
+    </div>
+      </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-surveyhumpbackwhale-s-documentation">
+<h1>Welcome to SurveyHumpbackWhale’s documentation!<a class="headerlink" href="#welcome-to-surveyhumpbackwhale-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-SurveyHumpbackWhale"></span><dl class="function">
+<dt id="SurveyHumpbackWhale.combine_comment_columns">
+<code class="sig-prename descclassname">SurveyHumpbackWhale.</code><code class="sig-name descname">combine_comment_columns</code><span class="sig-paren">(</span><em class="sig-param">dataset</em>, <em class="sig-param">columns_to_look_at</em>, <em class="sig-param">re_other_pattern=re.compile('other')</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SurveyHumpbackWhale.html#combine_comment_columns"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SurveyHumpbackWhale.combine_comment_columns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combines the free answer columns with the pre-writed answers column.</p>
+<p>Combines the free answer columns with the pre-writed answers column (ie:
+‘What is the app that you use most of the time?’ and the answers were
+‘whatsapp’, ‘facebook’ or ‘other’, where when you mark ‘other’ enable an
+input of text to write).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> – A dataset divided in columns and rows, like DataFrame from
+pandas module.</p></li>
+<li><p><strong>columns_to_look_at</strong> – A list that contains the comment column’s index.</p></li>
+<li><p><strong>re_other_pattern</strong> – A regular expression the identifies the word that
+enables a free input of text in a survey. By default
+its setup to the word ‘other’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Void, just updates the dataset introduce by parameter.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="SurveyHumpbackWhale.comment_columns_detector">
+<code class="sig-prename descclassname">SurveyHumpbackWhale.</code><code class="sig-name descname">comment_columns_detector</code><span class="sig-paren">(</span><em class="sig-param">dataset</em>, <em class="sig-param">comment_columns_pattern=re.compile('-COMENTARIO-|-COMMENT-')</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SurveyHumpbackWhale.html#comment_columns_detector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SurveyHumpbackWhale.comment_columns_detector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detects comment columns.</p>
+<p>Detects the columns where is stored the input from free answers (ie:
+‘What is the app that you use most of the time?’ and the answers were
+‘whatsapp’, ‘facebook’ or ‘other’, where when you mark ‘other’ enable an
+input of text to write and the columns that contains that answers is what
+is finded with this method).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> – A dataset divided in columns and rows, like DataFrame from
+pandas module.</p></li>
+<li><p><strong>comment_columns_pattern</strong> – A regular expression the identifies the word
+used for this kind of columns in a survey. By
+default its setup to the word ‘-COMENTARIO-‘
+or ‘-COMMENT-‘.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of the detected comment column’s index by the pattern inside
+of the dataset.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="SurveyHumpbackWhale.create_and_poblate_new_columns">
+<code class="sig-prename descclassname">SurveyHumpbackWhale.</code><code class="sig-name descname">create_and_poblate_new_columns</code><span class="sig-paren">(</span><em class="sig-param">dataset</em>, <em class="sig-param">new_columns</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SurveyHumpbackWhale.html#create_and_poblate_new_columns"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SurveyHumpbackWhale.create_and_poblate_new_columns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and poblates with the new columns the input dataset.</p>
+<p>Creates and poblates with the new columns the input dataset that
+represent the survey, in example, in a survey with a question of the most
+used apps and answers like: ‘whatsapp’, ‘facebook’ or ‘instagram’ and we
+want to make a new column that marks people who used mostly facebook this
+function create the column and marks to 1 or 0 depending if it was
+the answer selected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> – A dataset divided in columns and rows, like DataFrame from
+pandas module.</p></li>
+<li><p><strong>new_columns</strong> – A list of the new extended columns.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Void, just updates the dataset introduce by parameter.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="SurveyHumpbackWhale.list_to_num_dict">
+<code class="sig-prename descclassname">SurveyHumpbackWhale.</code><code class="sig-name descname">list_to_num_dict</code><span class="sig-paren">(</span><em class="sig-param">list_elements</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SurveyHumpbackWhale.html#list_to_num_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SurveyHumpbackWhale.list_to_num_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converses a list to dictionary keeping the order of the list.</p>
+<p>Converses a list to dictionary keeping the order of the list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>list_elements</strong> – A list of elements that can be any type.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A dictionary with every element of the input list keeping its order.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="SurveyHumpbackWhale.make_new_columns_from_answers">
+<code class="sig-prename descclassname">SurveyHumpbackWhale.</code><code class="sig-name descname">make_new_columns_from_answers</code><span class="sig-paren">(</span><em class="sig-param">dataset</em>, <em class="sig-param">columns_to_look_at</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SurveyHumpbackWhale.html#make_new_columns_from_answers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SurveyHumpbackWhale.make_new_columns_from_answers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes new columns based on the answers giving to the survey.</p>
+<p>Makes new columns based on the answers giving to the survey, this function
+obtain the new columns to create in order of extend a certain columns
+from a dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> – A dataset divided in columns and rows, like DataFrame from
+pandas module that needs to be traduced.</p></li>
+<li><p><strong>columns_to_look_at</strong> – A list of numbers that represent the index of the
+columns to extend</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list with the names of the new extended columns.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="SurveyHumpbackWhale.map_answers_to_categories">
+<code class="sig-prename descclassname">SurveyHumpbackWhale.</code><code class="sig-name descname">map_answers_to_categories</code><span class="sig-paren">(</span><em class="sig-param">dataset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SurveyHumpbackWhale.html#map_answers_to_categories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SurveyHumpbackWhale.map_answers_to_categories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps survey answers in a dataset to a dictionary in order of transform to numbers later.</p>
+<p>Maps every answer to the survey recollected in the dataset in order of transform all of
+that to ordinal variables. Also it takes in consideration important language quantifiers
+like ‘Between’ or ‘More’ to make this kind of permutations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dataset</strong> – A dataset divided in columns and rows, like DataFrame from pandas module.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>A dict that map every answer (dataset value in column j and row i) to every question
+of the survey (dataset column name). For example:</p>
+<p>For a dataset like this:</p>
+<dl class="simple">
+<dt>dataset = pd.DataFrame(data = {‘Do you like this python module?’: [‘Yes’, ‘No’],</dt><dd><p>’How useful do you thing it is from 1 to 10?’: [3, 8]})</p>
+</dd>
+</dl>
+<p>This function returns a dict like this:</p>
+<dl class="simple">
+<dt>dict_data = {0: {‘question’:’Do you like this python module?’, ‘answers’:{‘No’:0, ‘Yes’:1}}</dt><dd><p>1: {‘question’:’How useful do you thing it is from 1 to 10?’, ‘answers’:{‘3’:3, ‘8’:8}}}</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="SurveyHumpbackWhale.smart_answers_sort">
+<code class="sig-prename descclassname">SurveyHumpbackWhale.</code><code class="sig-name descname">smart_answers_sort</code><span class="sig-paren">(</span><em class="sig-param">answers_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SurveyHumpbackWhale.html#smart_answers_sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SurveyHumpbackWhale.smart_answers_sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sorts the answers from a survey stored in a dataframe.</p>
+<p>Sorts the answers from a survey stored in a dataframe in consideration
+of the answer represents a range by locating language particles that has
+implicit meaning of range (ie: ‘Between’ or ‘Less … than’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>answers_list</strong> – A list with the answers that can had a meaning of range.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list that contains all the answers from answers_list but ordered in
+function of the ranges that represents.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="SurveyHumpbackWhale.smart_digit_conversion">
+<code class="sig-prename descclassname">SurveyHumpbackWhale.</code><code class="sig-name descname">smart_digit_conversion</code><span class="sig-paren">(</span><em class="sig-param">digit_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SurveyHumpbackWhale.html#smart_digit_conversion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SurveyHumpbackWhale.smart_digit_conversion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts the survey number format to python number format</p>
+<p>Converts the numeric answers from a survey like 2.000 or 1,23; to the
+python number format like 2000 or 1.23 in order of evade errors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>digit_list</strong> – A list of the digits to be converse.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new digit list in the python numeric format.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="SurveyHumpbackWhale.traduce_survey_with_dictionary">
+<code class="sig-prename descclassname">SurveyHumpbackWhale.</code><code class="sig-name descname">traduce_survey_with_dictionary</code><span class="sig-paren">(</span><em class="sig-param">dict_traduction</em>, <em class="sig-param">dataset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SurveyHumpbackWhale.html#traduce_survey_with_dictionary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#SurveyHumpbackWhale.traduce_survey_with_dictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Traduces a survey answers dataframe with a dictionary.</p>
+<p>Traduces the dataframe that represents questions and answers from a survey
+in function of a dictionary which key represents the non traduce part of
+the dataset and value represents the traduction. Sometimes its useful to
+make multilangual surveys and this function helps to mix various sources
+of data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dict_traduction</strong> – Dictionary who directs the traduction process. Keys
+are the value that needs to be traduced and values are
+its traduction.</p></li>
+<li><p><strong>dataset</strong> – A dataset divided in columns and rows, like DataFrame from
+pandas module that needs to be traduced.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new dataframe completly traduced.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="#" title="index">
+               <img class="logo" src="_static/Logo.png" alt="Logo"/>
+            </a></p>
+
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+      <div class="relbar-bottom">
+            
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+      <li><a href="#">SurveyHumpbackWhale 1.0.0 documentation</a> &#187;</li>
+ 
+      </ul>
+    </div>
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Alfonso Barragán Carmona.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.3.
+    </div>
+      <!-- PSphinxTheme -->
+  </body>
+</html>

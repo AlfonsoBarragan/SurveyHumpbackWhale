@@ -1,0 +1,675 @@
+
+
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>SurveyHumpbackWhale &#8212; SurveyHumpbackWhale 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../_static/greenblue.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/local_fonts.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../_static/jquery.cookie.js"></script>
+    <script src="../_static/p_sphinx_theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head><body>
+      <div class="relbar-top">
+            
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+      <li><a href="../index.html">SurveyHumpbackWhale 1.0.0 documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for SurveyHumpbackWhale</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="sd">&quot;&quot;&quot; SurveyHumpbackWhale is a module with the purpouse of automatize tasks in order to proccess survey&#39;s data easily.</span>
+
+<span class="sd">This module mainly transform the answers into numbers in order of aplying learning algorithms like clustering or</span>
+<span class="sd">random forests. Also it has some functions that correct errors in surveys or combine the free comments columns</span>
+<span class="sd">with electable answers included, in example, in a survey with a question of the most used apps, we can include</span>
+<span class="sd">answers and a free comment answer where the user writes what he want. This function module can combine this </span>
+<span class="sd">free question with the tipo question that are included in the survey.</span>
+
+<span class="sd">    Typical usage example:</span>
+<span class="sd">        </span>
+<span class="sd">    import SurveyHumpbackWhale as surv_whale</span>
+<span class="sd">    import pandas as pd</span>
+<span class="sd">    </span>
+<span class="sd">    dataset_survey = pd.read_csv(path, separator=&#39;,&#39;)</span>
+<span class="sd">    comment_columns = surv_whale.comment_columns_detector(dataset_survey) # Detects comment columns.</span>
+<span class="sd">    surv_whale.aglutinate_comment_columns(dataset_survey, comment_columns) # Combine the comment columns with survey tipo answers.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># Regular expressions to make transforms in the data</span>
+<span class="n">_re_words_finder</span>        <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[a-zA-ZáéíóúÁÉÍÓÚ]*&quot;</span><span class="p">)</span>
+<span class="n">_re_comment_pattern</span>     <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;-COMENTARIO-|-COMMENT-&quot;</span><span class="p">)</span>
+<span class="n">_re_digit_pattern</span>       <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[\d|\d\.]*&quot;</span><span class="p">)</span>
+<span class="n">_re_zero_pattern</span>        <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;ningún|solo|ninguno|ninguna|nadie|no recuerdo|no lo sé|desconozco|only|no one|i don&#39;t remember|i do not remember|i don&#39;t know|i do not know|alone|no&quot;</span><span class="p">)</span>
+<span class="n">_re_afirmative_pattern</span>  <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;yes&quot;</span><span class="p">)</span>
+<span class="n">_re_error_pattern</span>       <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;aaa Not A Number aaa&quot;</span><span class="p">)</span>
+<span class="n">_re_other_pattern</span>       <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;other&quot;</span><span class="p">)</span>
+    
+
+<span class="c1"># Corpus of language particles</span>
+
+<span class="n">corpus_lang_particles</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Greater_particles&#39;</span><span class="p">:[</span><span class="s1">&#39;más&#39;</span><span class="p">,</span> <span class="s1">&#39;more&#39;</span><span class="p">,</span> <span class="s1">&#39;with more&#39;</span><span class="p">,</span> <span class="s1">&#39;up to&#39;</span><span class="p">],</span> 
+                         <span class="s1">&#39;Middle_particles&#39;</span><span class="p">:[</span><span class="s1">&#39;entre&#39;</span><span class="p">,</span> <span class="s1">&#39;between&#39;</span><span class="p">,</span> <span class="s1">&#39;de&#39;</span><span class="p">,</span> <span class="s1">&#39;from&#39;</span><span class="p">],</span> 
+                         <span class="s1">&#39;Lesser_particles&#39;</span><span class="p">:[</span><span class="s1">&#39;menos&#39;</span><span class="p">,</span><span class="s1">&#39;less&#39;</span><span class="p">,</span> <span class="s1">&#39;hasta&#39;</span><span class="p">,</span> <span class="s1">&#39;with less&#39;</span><span class="p">],</span>
+                         <span class="s1">&#39;Zero_particles&#39;</span><span class="p">:[</span><span class="s2">&quot;ningún&quot;</span><span class="p">,</span><span class="s2">&quot;solo&quot;</span><span class="p">,</span><span class="s2">&quot;ninguno&quot;</span><span class="p">,</span><span class="s2">&quot;ninguna&quot;</span><span class="p">,</span><span class="s2">&quot;nadie&quot;</span><span class="p">,</span>
+                                           <span class="s2">&quot;no sé&quot;</span><span class="p">,</span>
+                                           <span class="s2">&quot;no recuerdo&quot;</span><span class="p">,</span><span class="s2">&quot;no lo sé&quot;</span><span class="p">,</span><span class="s2">&quot;desconozco&quot;</span><span class="p">,</span><span class="s2">&quot;only&quot;</span><span class="p">,</span>
+                                           <span class="s2">&quot;no one&quot;</span><span class="p">,</span><span class="s2">&quot;i don&#39;t remember&quot;</span><span class="p">,</span><span class="s2">&quot;i do not remember&quot;</span><span class="p">,</span>
+                                           <span class="s2">&quot;i don&#39;t know&quot;</span><span class="p">,</span><span class="s2">&quot;i do not know&quot;</span><span class="p">,</span><span class="s2">&quot;i live alone&quot;</span><span class="p">,</span><span class="s2">&quot;no&quot;</span><span class="p">],</span>
+                         <span class="s1">&#39;Afirmative_particles&#39;</span><span class="p">:[</span><span class="s1">&#39;yes&#39;</span><span class="p">],</span>
+                         <span class="s1">&#39;Error_particles&#39;</span><span class="p">:[</span><span class="s1">&#39;nan&#39;</span><span class="p">],</span>
+                         <span class="s1">&#39;Temporal_particles&#39;</span><span class="p">:{</span>
+                             <span class="s1">&#39;spanish&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;siempre&#39;</span><span class="p">,</span> <span class="s1">&#39;habitualmente&#39;</span><span class="p">,</span> <span class="s1">&#39;a veces&#39;</span><span class="p">,</span> <span class="s1">&#39;nunca&#39;</span><span class="p">],</span>
+                             <span class="s1">&#39;english&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="s1">&#39;daily&#39;</span><span class="p">,</span> <span class="s1">&#39;normally&#39;</span><span class="p">,</span> <span class="s1">&#39;several times&#39;</span><span class="p">,</span> <span class="s1">&#39;sometimes&#39;</span><span class="p">,</span> <span class="s1">&#39;never&#39;</span><span class="p">,</span> <span class="s1">&#39;twice&#39;</span><span class="p">,</span> <span class="s1">&#39;once&#39;</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="s1">&#39;week&#39;</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">]</span>
+                             <span class="p">},</span>
+                         <span class="s1">&#39;Quantifiers&#39;</span><span class="p">:[</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="s1">&#39;primary&#39;</span><span class="p">,</span> <span class="s1">&#39;secondary&#39;</span><span class="p">,</span> <span class="s1">&#39;higher&#39;</span><span class="p">]</span>
+                         <span class="p">}</span>
+
+<div class="viewcode-block" id="list_to_num_dict"><a class="viewcode-back" href="../index.html#SurveyHumpbackWhale.list_to_num_dict">[docs]</a><span class="k">def</span> <span class="nf">list_to_num_dict</span><span class="p">(</span><span class="n">list_elements</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converses a list to dictionary keeping the order of the list.</span>
+<span class="sd">    </span>
+<span class="sd">    Converses a list to dictionary keeping the order of the list.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        list_elements: A list of elements that can be any type.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary with every element of the input list keeping its order.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dictionary</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">list_elements</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">element</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+            <span class="n">dictionary</span><span class="p">[</span><span class="n">element</span><span class="p">]</span> <span class="o">=</span> <span class="n">element</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">element</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">):</span> 
+                <span class="k">if</span> <span class="n">element</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Zero_particles&#39;</span><span class="p">]:</span>
+                        <span class="n">dictionary</span><span class="p">[</span><span class="n">element</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                        
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dictionary</span><span class="p">[</span><span class="n">element</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dictionary</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dictionary</span><span class="p">[</span><span class="n">element</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dictionary</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dictionary</span></div>
+
+<div class="viewcode-block" id="map_answers_to_categories"><a class="viewcode-back" href="../index.html#SurveyHumpbackWhale.map_answers_to_categories">[docs]</a><span class="k">def</span> <span class="nf">map_answers_to_categories</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;Maps survey answers in a dataset to a dictionary in order of transform to numbers later.</span>
+<span class="sd">    </span>
+<span class="sd">    Maps every answer to the survey recollected in the dataset in order of transform all of</span>
+<span class="sd">    that to ordinal variables. Also it takes in consideration important language quantifiers</span>
+<span class="sd">    like &#39;Between&#39; or &#39;More&#39; to make this kind of permutations.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        dataset: A dataset divided in columns and rows, like DataFrame from pandas module.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A dict that map every answer (dataset value in column j and row i) to every question</span>
+<span class="sd">        of the survey (dataset column name). For example:</span>
+<span class="sd">            </span>
+<span class="sd">        For a dataset like this:        </span>
+<span class="sd">        </span>
+<span class="sd">        dataset = pd.DataFrame(data = {&#39;Do you like this python module?&#39;: [&#39;Yes&#39;, &#39;No&#39;], </span>
+<span class="sd">                                       &#39;How useful do you thing it is from 1 to 10?&#39;: [3, 8]})</span>
+<span class="sd">        </span>
+<span class="sd">        This function returns a dict like this:</span>
+<span class="sd">            </span>
+<span class="sd">        dict_data = {0: {&#39;question&#39;:&#39;Do you like this python module?&#39;, &#39;answers&#39;:{&#39;No&#39;:0, &#39;Yes&#39;:1}}</span>
+<span class="sd">                     1: {&#39;question&#39;:&#39;How useful do you thing it is from 1 to 10?&#39;, &#39;answers&#39;:{&#39;3&#39;:3, &#39;8&#39;:8}}}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">answers_key_value</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># Dict to store the survey structure.</span>
+    <span class="n">answers_map_to_replace_in_dataframe</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># Dict to directly replace in a pandas dataframes the natural values for the new digit values</span>
+    
+    <span class="n">columns_data</span>    <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">columns</span> <span class="c1"># Columns of dataset (as known as survey questions).</span>
+    
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">column</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">columns_data</span><span class="p">):</span>
+        <span class="n">answers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span> <span class="c1"># Take all kind of the answers giving to the question and converts it in a list.</span>
+        
+        <span class="c1"># Now we try to remove the nan data that can be in the survey and </span>
+        <span class="c1"># replace it by a string that can be manipulate easily. It can raise</span>
+        <span class="c1"># a ValueError exception if there isn&#39;t a nan value in the answers, in</span>
+        <span class="c1"># that case nothing needs to be changed.</span>
+        
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="n">answers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="n">answers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
+            
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        
+        <span class="c1"># In this part we look if there are some language particle that</span>
+        <span class="c1"># denotates the existence of a range of values, in case that we find</span>
+        <span class="c1"># words like &#39;Between&#39; or &#39;More&#39;, we proceed to make an smart sort of</span>
+        <span class="c1"># answers. Otherwise, we just orther the answers alphabetically. If </span>
+        <span class="c1"># all the answers are numbers, it can raises a TypeError and then </span>
+        <span class="c1"># just need to sort the answers.</span>
+        
+        <span class="k">try</span><span class="p">:</span>                
+            <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">):</span>
+                                
+                <span class="k">if</span> <span class="p">((</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+                                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span> 
+                                <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Greater_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                                
+                    <span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+                                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span> 
+                                <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Middle_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    
+                    <span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+                                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span> 
+                                <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Lesser_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                                
+                     <span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+                                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span> 
+                                <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">]):</span>
+                
+                    <span class="n">answers</span> <span class="o">=</span> <span class="n">smart_answers_sort</span><span class="p">(</span><span class="n">answers</span><span class="p">)</span>
+                    
+                <span class="k">elif</span> <span class="p">(</span><span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Greater_particles&#39;</span><span class="p">]</span> <span class="ow">or</span> 
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Middle_particles&#39;</span><span class="p">]</span> <span class="ow">or</span> 
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Lesser_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Zero_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Afirmative_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;spanish&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Quantifiers&#39;</span><span class="p">]):</span>
+                    
+                    <span class="n">answers</span> <span class="o">=</span> <span class="n">smart_answers_sort</span><span class="p">(</span><span class="n">answers</span><span class="p">)</span>
+                
+                <span class="k">elif</span> <span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Greater_particles&#39;</span><span class="p">]</span> <span class="ow">or</span> 
+                    <span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Middle_particles&#39;</span><span class="p">]</span> <span class="ow">or</span> 
+                    <span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Lesser_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Zero_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Afirmative_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;spanish&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">]</span><span class="ow">or</span>
+                    <span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Quantifiers&#39;</span><span class="p">]):</span>
+                                        
+                    <span class="n">answers</span> <span class="o">=</span> <span class="n">smart_answers_sort</span><span class="p">(</span><span class="n">answers</span><span class="p">)</span>
+                
+                <span class="k">else</span><span class="p">:</span> 
+                    <span class="n">answers</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            
+            <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">):</span>
+                                
+                <span class="k">if</span> <span class="p">(</span><span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Greater_particles&#39;</span><span class="p">]</span> <span class="ow">or</span> 
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Middle_particles&#39;</span><span class="p">]</span> <span class="ow">or</span> 
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Lesser_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Zero_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Afirmative_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;spanish&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">answers</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Quantifiers&#39;</span><span class="p">]):</span>
+                    
+                    <span class="n">answers</span> <span class="o">=</span> <span class="n">smart_answers_sort</span><span class="p">(</span><span class="n">answers</span><span class="p">)</span>
+                
+            <span class="k">else</span><span class="p">:</span> 
+                
+                <span class="n">answers</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+                
+            
+        <span class="k">except</span> <span class="ne">TypeError</span> <span class="ow">or</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="n">answers</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        
+        <span class="c1"># Finally we add to the dictionary that has all the questions, answers and its</span>
+        <span class="c1"># transformation to number the dictionary with the question (column) and the </span>
+        <span class="c1"># dictionary of all the answers finded, created by an auxiliar function.</span>
+        
+        <span class="n">answers_key_value</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;question&#39;</span><span class="p">:</span><span class="n">column</span><span class="p">,</span> <span class="s1">&#39;answers&#39;</span><span class="p">:</span> <span class="n">list_to_num_dict</span><span class="p">(</span><span class="n">answers</span><span class="p">)}</span>    
+        <span class="n">answers_map_to_replace_in_dataframe</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">column</span> <span class="p">:</span> <span class="n">list_to_num_dict</span><span class="p">(</span><span class="n">answers</span><span class="p">)}</span>    
+
+    <span class="k">return</span> <span class="n">answers_key_value</span><span class="p">,</span> <span class="n">answers_map_to_replace_in_dataframe</span></div>
+
+<div class="viewcode-block" id="make_new_columns_from_answers"><a class="viewcode-back" href="../index.html#SurveyHumpbackWhale.make_new_columns_from_answers">[docs]</a><span class="k">def</span> <span class="nf">make_new_columns_from_answers</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">columns_to_look_at</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Makes new columns based on the answers giving to the survey.</span>
+<span class="sd">    </span>
+<span class="sd">    Makes new columns based on the answers giving to the survey, this function</span>
+<span class="sd">    obtain the new columns to create in order of extend a certain columns</span>
+<span class="sd">    from a dataset.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        dataset: A dataset divided in columns and rows, like DataFrame from </span>
+<span class="sd">                pandas module that needs to be traduced.</span>
+<span class="sd">        columns_to_look_at: A list of numbers that represent the index of the</span>
+<span class="sd">                            columns to extend</span>
+<span class="sd">            </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A list with the names of the new extended columns.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">new_columns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">columns_to_look_at</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="n">column</span><span class="p">]]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">aux</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;[&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;]&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                
+                <span class="k">for</span> <span class="n">new_column</span> <span class="ow">in</span> <span class="n">aux</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">):</span>
+                    
+                    <span class="k">if</span> <span class="n">new_column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot; &quot;</span><span class="p">:</span>
+                        <span class="n">aux_new_column</span> <span class="o">=</span> <span class="n">new_column</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">aux_new_column</span> <span class="o">=</span> <span class="n">new_column</span>
+            
+                    <span class="k">if</span> <span class="n">aux_new_column</span> <span class="o">!=</span> <span class="s1">&#39;other&#39;</span><span class="p">:</span>
+                        
+                        <span class="k">if</span> <span class="n">aux_new_column</span> <span class="o">==</span> <span class="s1">&#39;Ninguno&#39;</span> <span class="ow">or</span> <span class="n">aux_new_column</span> <span class="o">==</span> <span class="s1">&#39;Ninguna&#39;</span> <span class="ow">or</span> <span class="n">aux_new_column</span> <span class="o">==</span> <span class="s1">&#39;Nimguno&#39;</span> <span class="ow">or</span> <span class="n">aux_new_column</span> <span class="o">==</span> <span class="s1">&#39;Nimguna&#39;</span><span class="p">:</span>
+                            <span class="n">aux_new_column</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_Ninguno&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="n">column</span><span class="p">])</span>
+
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">aux_new_column</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="n">column</span><span class="p">],</span> <span class="n">aux_new_column</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">))</span>
+                 
+                        <span class="k">if</span> <span class="n">aux_new_column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_columns</span><span class="p">:</span>
+                            <span class="n">new_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aux_new_column</span><span class="p">)</span>
+                    
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">pass</span>           
+            
+            
+    <span class="k">return</span> <span class="n">new_columns</span></div>
+
+
+<span class="c1"># Fix section</span>
+    
+<div class="viewcode-block" id="combine_comment_columns"><a class="viewcode-back" href="../index.html#SurveyHumpbackWhale.combine_comment_columns">[docs]</a><span class="k">def</span> <span class="nf">combine_comment_columns</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">columns_to_look_at</span><span class="p">,</span> <span class="n">re_other_pattern</span> <span class="o">=</span> <span class="n">_re_other_pattern</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;Combines the free answer columns with the pre-writed answers column.</span>
+<span class="sd">    </span>
+<span class="sd">    Combines the free answer columns with the pre-writed answers column (ie: </span>
+<span class="sd">    &#39;What is the app that you use most of the time?&#39; and the answers were </span>
+<span class="sd">    &#39;whatsapp&#39;, &#39;facebook&#39; or &#39;other&#39;, where when you mark &#39;other&#39; enable an </span>
+<span class="sd">    input of text to write). </span>
+<span class="sd">        </span>
+<span class="sd">    Args:</span>
+<span class="sd">        dataset: A dataset divided in columns and rows, like DataFrame from </span>
+<span class="sd">                pandas module.</span>
+<span class="sd">        columns_to_look_at: A list that contains the comment column&#39;s index.</span>
+<span class="sd">        re_other_pattern: A regular expression the identifies the word that </span>
+<span class="sd">                        enables a free input of text in a survey. By default</span>
+<span class="sd">                        its setup to the word &#39;other&#39;.</span>
+<span class="sd">                        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Void, just updates the dataset introduce by parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">columns_to_look_at</span><span class="p">:</span>
+        
+        <span class="k">for</span> <span class="n">row_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)):</span>            
+            <span class="k">if</span> <span class="n">re_other_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])):</span>
+                <span class="n">phrase</span>      <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">location</span>    <span class="o">=</span> <span class="n">re_other_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">phrase</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="n">phrase</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">location</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span> <span class="o">+</span> <span class="n">phrase</span><span class="p">[</span><span class="n">location</span><span class="o">.</span><span class="n">end</span><span class="p">():]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                    <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">phrase</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">location</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">phrase</span><span class="p">[</span><span class="n">location</span><span class="o">.</span><span class="n">end</span><span class="p">():]</span>
+                
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span>
+                
+            
+            <span class="k">elif</span> <span class="n">re_other_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])):</span>
+                <span class="n">phrase</span>      <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+                <span class="n">location</span>    <span class="o">=</span> <span class="n">re_other_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">phrase</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="n">phrase</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">location</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span> <span class="o">+</span> <span class="n">phrase</span><span class="p">[</span><span class="n">location</span><span class="o">.</span><span class="n">end</span><span class="p">():]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                    <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">phrase</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">location</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">phrase</span><span class="p">[</span><span class="n">location</span><span class="o">.</span><span class="n">end</span><span class="p">():]</span>
+                
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">row_index</span><span class="p">,</span> <span class="n">column</span><span class="p">]</span></div>
+                                        
+<span class="k">def</span> <span class="nf">fix_date_format</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">columns_with_dates</span><span class="p">):</span>
+    
+    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">columns_with_dates</span><span class="p">:</span>
+        <span class="n">aux</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s1">&#39;[0-9]*\.[0-9]*\.[0-9]*&#39;</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">aux</span>
+
+<div class="viewcode-block" id="smart_answers_sort"><a class="viewcode-back" href="../index.html#SurveyHumpbackWhale.smart_answers_sort">[docs]</a><span class="k">def</span> <span class="nf">smart_answers_sort</span><span class="p">(</span><span class="n">answers_list</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;Sorts the answers from a survey stored in a dataframe.</span>
+<span class="sd">    </span>
+<span class="sd">    Sorts the answers from a survey stored in a dataframe in consideration</span>
+<span class="sd">    of the answer represents a range by locating language particles that has </span>
+<span class="sd">    implicit meaning of range (ie: &#39;Between&#39; or &#39;Less ... than&#39;).</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        answers_list: A list with the answers that can had a meaning of range.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A list that contains all the answers from answers_list but ordered in</span>
+<span class="sd">        function of the ranges that represents.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">answers_examples</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">answer_not_numeric</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">answers_list</span><span class="p">:</span>
+        
+        <span class="c1"># First, we extract the numeric elements and word elements from an </span>
+        <span class="c1"># answer throught the regular expressions defined at the begining of</span>
+        <span class="c1"># the module. </span>
+        
+        <span class="n">digit_list</span> <span class="o">=</span> <span class="n">_re_digit_pattern</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+        <span class="n">clean_digit_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">digit_list</span><span class="p">))</span>
+        
+        <span class="n">words_list</span> <span class="o">=</span> <span class="n">_re_words_finder</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+        <span class="n">clean_words_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">words_list</span><span class="p">))</span>
+        
+        <span class="c1"># Then we make a transform in the numeric elements converting it to </span>
+        <span class="c1"># python format. This is because the number format from the surveys </span>
+        <span class="c1"># (ie: 2.000 or 1,23 in survey and 2000 or 1.23 in python).</span>
+
+        <span class="n">clean_digit_list</span> <span class="o">=</span> <span class="n">smart_digit_conversion</span><span class="p">(</span><span class="n">clean_digit_list</span><span class="p">)</span>        
+    
+        <span class="c1"># Checks if the answer is contextually null (ie: for question, &#39;How </span>
+        <span class="c1"># many people live with you?, the answer &#39;alone&#39; it&#39;s equivalent to 0).</span>
+        
+        <span class="k">if</span> <span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Zero_particles&#39;</span><span class="p">]:</span>
+            <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="k">elif</span> <span class="n">combine_all_words</span><span class="p">(</span><span class="n">clean_words_list</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Zero_particles&#39;</span><span class="p">]:</span>
+            <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+            
+        <span class="k">elif</span> <span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Afirmative_particles&#39;</span><span class="p">]:</span>
+            <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>           
+
+        <span class="k">else</span><span class="p">:</span>
+            
+            <span class="c1"># Identifies the kind of particle with the corpus of particles defined at</span>
+            <span class="c1"># the begin of the module and took a represent of the range in function of</span>
+            <span class="c1"># the particle. First looking the len of the answer, then apply the kind of</span>
+            <span class="c1"># preprocess adecuated to it.</span>
+            
+            <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">clean_words_list</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Greater_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">clean_words_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Greater_particles&#39;</span><span class="p">])):</span>
+                    <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="n">clean_digit_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+    
+                <span class="k">elif</span> <span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Middle_particles&#39;</span><span class="p">]):</span>
+                    <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">clean_digit_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">clean_digit_list</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+                
+                <span class="k">elif</span> <span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Lesser_particles&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">clean_words_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Lesser_particles&#39;</span><span class="p">])):</span>
+                    <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="n">clean_digit_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+                
+                <span class="k">elif</span> <span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">]</span> <span class="ow">or</span>
+                    <span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">clean_words_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">])):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">])</span> <span class="o">-</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+                    
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="n">auxiliar_element</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">clean_words_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+                        <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">])</span> <span class="o">-</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">auxiliar_element</span><span class="p">)</span>
+                
+                <span class="k">elif</span> <span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Quantifiers&#39;</span><span class="p">]):</span>
+                    <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Quantifiers&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+                
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Greater_particles&#39;</span><span class="p">]):</span>
+                    <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="n">clean_digit_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+    
+                <span class="k">elif</span> <span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Middle_particles&#39;</span><span class="p">]):</span>
+                    <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">clean_digit_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">clean_digit_list</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+                
+                <span class="k">elif</span> <span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Lesser_particles&#39;</span><span class="p">]):</span>
+                    <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="n">clean_digit_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+                
+                <span class="k">elif</span> <span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">]):</span>
+                    <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">])</span> <span class="o">-</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Temporal_particles&#39;</span><span class="p">][</span><span class="s1">&#39;english&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+                
+                <span class="k">elif</span> <span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Quantifiers&#39;</span><span class="p">]):</span>
+                    <span class="n">answers_examples</span><span class="p">[</span><span class="n">answers_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">element</span><span class="p">)]</span> <span class="o">=</span> <span class="n">corpus_lang_particles</span><span class="p">[</span><span class="s1">&#39;Quantifiers&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">clean_words_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+    
+            
+    <span class="c1"># Finally, we acummulated the answers with the &#39;represent&#39; of its range and</span>
+    <span class="c1"># we sort them.                </span>
+    
+    <span class="n">answers_examples_def</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">answers_examples</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">item</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">])}</span>
+
+    <span class="n">definitive_answers_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">answer</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">answers_examples_def</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>            
+        <span class="n">definitive_answers_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">answers_list</span><span class="p">[</span><span class="n">answer</span><span class="p">])</span>
+        
+    <span class="k">return</span> <span class="n">definitive_answers_list</span></div>
+
+<div class="viewcode-block" id="smart_digit_conversion"><a class="viewcode-back" href="../index.html#SurveyHumpbackWhale.smart_digit_conversion">[docs]</a><span class="k">def</span> <span class="nf">smart_digit_conversion</span><span class="p">(</span><span class="n">digit_list</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;Converts the survey number format to python number format</span>
+<span class="sd">    </span>
+<span class="sd">    Converts the numeric answers from a survey like 2.000 or 1,23; to the </span>
+<span class="sd">    python number format like 2000 or 1.23 in order of evade errors.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        digit_list: A list of the digits to be converse.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A new digit list in the python numeric format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">new_digit_list</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">digit</span> <span class="ow">in</span> <span class="n">digit_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">digit</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">new_digit</span> <span class="o">=</span> <span class="n">digit</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">new_digit_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">new_digit</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">digit</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>  <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">new_digit</span> <span class="o">=</span> <span class="n">digit</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+            <span class="n">new_digit_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">new_digit</span><span class="p">))</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_digit_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">digit</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">new_digit_list</span></div>
+
+<div class="viewcode-block" id="traduce_survey_with_dictionary"><a class="viewcode-back" href="../index.html#SurveyHumpbackWhale.traduce_survey_with_dictionary">[docs]</a><span class="k">def</span> <span class="nf">traduce_survey_with_dictionary</span><span class="p">(</span><span class="n">dict_traduction</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+    
+    
+    
+    <span class="sd">&quot;&quot;&quot;Traduces a survey answers dataframe with a dictionary.</span>
+<span class="sd">    </span>
+<span class="sd">    Traduces the dataframe that represents questions and answers from a survey</span>
+<span class="sd">    in function of a dictionary which key represents the non traduce part of</span>
+<span class="sd">    the dataset and value represents the traduction. Sometimes its useful to</span>
+<span class="sd">    make multilangual surveys and this function helps to mix various sources</span>
+<span class="sd">    of data.</span>
+<span class="sd">    </span>
+<span class="sd">    Args: </span>
+<span class="sd">        dict_traduction: Dictionary who directs the traduction process. Keys </span>
+<span class="sd">                        are the value that needs to be traduced and values are</span>
+<span class="sd">                        its traduction.</span>
+<span class="sd">        dataset: A dataset divided in columns and rows, like DataFrame from </span>
+<span class="sd">                pandas module that needs to be traduced.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        A new dataframe completly traduced.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">dataset_to_work</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">dict_traduction</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        
+        <span class="n">key_to_search</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">,</span><span class="s1">&#39;\(&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">,</span><span class="s1">&#39;\)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;[&#39;</span><span class="p">,</span><span class="s1">&#39;\[&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;]&#39;</span><span class="p">,</span><span class="s1">&#39;\]&#39;</span><span class="p">)</span>
+        <span class="n">dataset_to_work</span> <span class="o">=</span> <span class="n">dataset_to_work</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">to_replace</span><span class="o">=</span><span class="n">key_to_search</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">dict_traduction</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        
+    <span class="k">return</span> <span class="n">dataset_to_work</span></div>
+
+<div class="viewcode-block" id="comment_columns_detector"><a class="viewcode-back" href="../index.html#SurveyHumpbackWhale.comment_columns_detector">[docs]</a><span class="k">def</span> <span class="nf">comment_columns_detector</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">comment_columns_pattern</span> <span class="o">=</span> <span class="n">_re_comment_pattern</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;Detects comment columns.</span>
+<span class="sd">    </span>
+<span class="sd">    Detects the columns where is stored the input from free answers (ie: </span>
+<span class="sd">    &#39;What is the app that you use most of the time?&#39; and the answers were </span>
+<span class="sd">    &#39;whatsapp&#39;, &#39;facebook&#39; or &#39;other&#39;, where when you mark &#39;other&#39; enable an </span>
+<span class="sd">    input of text to write and the columns that contains that answers is what</span>
+<span class="sd">    is finded with this method).</span>
+<span class="sd">        </span>
+<span class="sd">    Args:</span>
+<span class="sd">        dataset: A dataset divided in columns and rows, like DataFrame from </span>
+<span class="sd">                pandas module.</span>
+<span class="sd">        comment_columns_pattern: A regular expression the identifies the word </span>
+<span class="sd">                                used for this kind of columns in a survey. By</span>
+<span class="sd">                                default its setup to the word &#39;-COMENTARIO-&#39; </span>
+<span class="sd">                                or &#39;-COMMENT-&#39;.</span>
+<span class="sd">    Returns: </span>
+<span class="sd">        A list of the detected comment column&#39;s index by the pattern inside</span>
+<span class="sd">        of the dataset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">columns_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">comment_columns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">columns_to_look_at</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    
+    <span class="k">for</span> <span class="n">column_index</span><span class="p">,</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">columns_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">comment_columns_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">column_name</span><span class="p">):</span>
+            <span class="n">comment_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column_index</span><span class="p">)</span>
+            <span class="n">columns_to_look_at</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column_index</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">comment_columns</span></div>
+    
+<div class="viewcode-block" id="create_and_poblate_new_columns"><a class="viewcode-back" href="../index.html#SurveyHumpbackWhale.create_and_poblate_new_columns">[docs]</a><span class="k">def</span> <span class="nf">create_and_poblate_new_columns</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">new_columns</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;Creates and poblates with the new columns the input dataset.</span>
+<span class="sd">    </span>
+<span class="sd">    Creates and poblates with the new columns the input dataset that </span>
+<span class="sd">    represent the survey, in example, in a survey with a question of the most </span>
+<span class="sd">    used apps and answers like: &#39;whatsapp&#39;, &#39;facebook&#39; or &#39;instagram&#39; and we </span>
+<span class="sd">    want to make a new column that marks people who used mostly facebook this</span>
+<span class="sd">    function create the column and marks to 1 or 0 depending if it was</span>
+<span class="sd">    the answer selected.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        dataset: A dataset divided in columns and rows, like DataFrame from </span>
+<span class="sd">                pandas module.</span>
+<span class="sd">        new_columns: A list of the new extended columns.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Void, just updates the dataset introduce by parameter.        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">new_columns</span><span class="p">:</span>
+        <span class="n">base_column</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">new_name_column</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">column</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="n">dataset</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>    
+
+        <span class="n">new_columns_index</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+        <span class="n">to_find</span> <span class="o">=</span> <span class="n">new_name_column</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">,</span> <span class="s1">&#39;\(&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">,</span> <span class="s1">&#39;\)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;\.&#39;</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">to_find</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39; &#39;</span><span class="p">:</span>
+            <span class="n">to_find</span> <span class="o">=</span> <span class="n">to_find</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            
+        <span class="k">while</span> <span class="n">to_find</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">to_find</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39; &#39;</span><span class="p">:</span>
+            <span class="n">to_find</span> <span class="o">=</span> <span class="n">to_find</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">to_find</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    
+        <span class="n">rastreator</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">to_find</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+        
+        <span class="k">for</span> <span class="n">index_row</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="n">base_column</span><span class="p">]):</span>
+                
+            <span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">):</span>
+                
+                <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">rastreator</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>   
+                    <span class="n">dataset</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">index_row</span><span class="p">:</span><span class="n">index_row</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">new_columns_index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        
+        
+    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">new_columns</span><span class="p">:</span>
+        <span class="n">base_column</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">base_column</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span> 
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">base_column</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+            
+            
+<span class="k">def</span> <span class="nf">combine_all_words</span><span class="p">(</span><span class="n">list_of_words</span><span class="p">):</span>
+    <span class="n">aux</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">list_of_words</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">aux</span> <span class="o">=</span> <span class="n">word</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">aux</span> <span class="o">+=</span> <span class="s2">&quot; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="n">aux</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html" title="index">
+               <img class="logo" src="../_static/Logo.png" alt="Logo"/>
+            </a></p>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+      <div class="relbar-bottom">
+            
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+      <li><a href="../index.html">SurveyHumpbackWhale 1.0.0 documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Alfonso Barragán Carmona.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.3.
+    </div>
+      <!-- PSphinxTheme -->
+  </body>
+</html>

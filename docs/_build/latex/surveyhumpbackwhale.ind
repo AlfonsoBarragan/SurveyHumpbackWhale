@@ -1,0 +1,38 @@
+\begin{sphinxtheindex}
+\let\bigletter\sphinxstyleindexlettergroup
+\let\spxpagem \sphinxstyleindexpagemain
+\let\spxentry \sphinxstyleindexentry
+\let\spxextra \sphinxstyleindexextra
+
+  \bigletter C
+  \item \spxentry{combine\_comment\_columns()}\spxextra{in module SurveyHumpbackWhale}, 
+		\hyperpage{1}
+  \item \spxentry{comment\_columns\_detector()}\spxextra{in module SurveyHumpbackWhale}, 
+		\hyperpage{1}
+  \item \spxentry{create\_and\_poblate\_new\_columns()}\spxextra{in module SurveyHumpbackWhale}, 
+		\hyperpage{1}
+
+  \indexspace
+  \bigletter L
+  \item \spxentry{list\_to\_num\_dict()}\spxextra{in module SurveyHumpbackWhale}, \hyperpage{1}
+
+  \indexspace
+  \bigletter M
+  \item \spxentry{make\_new\_columns\_from\_answers()}\spxextra{in module SurveyHumpbackWhale}, 
+		\hyperpage{1}
+  \item \spxentry{map\_answers\_to\_categories()}\spxextra{in module SurveyHumpbackWhale}, 
+		\hyperpage{2}
+
+  \indexspace
+  \bigletter S
+  \item \spxentry{smart\_answers\_sort()}\spxextra{in module SurveyHumpbackWhale}, \hyperpage{2}
+  \item \spxentry{smart\_digit\_conversion()}\spxextra{in module SurveyHumpbackWhale}, 
+		\hyperpage{2}
+  \item \spxentry{SurveyHumpbackWhale}\spxextra{module}, \hyperpage{1}
+
+  \indexspace
+  \bigletter T
+  \item \spxentry{traduce\_survey\_with\_dictionary()}\spxextra{in module SurveyHumpbackWhale}, 
+		\hyperpage{2}
+
+\end{sphinxtheindex}

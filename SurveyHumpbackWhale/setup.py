@@ -1,10 +1,7 @@
-import setuptools
+from setuptools import setup, find_packages
 
-
-setuptools.setup(
+setup(
     name='SurveyHumpbackWhale',
-    version='2020.1.0',
-    description='Survey utils module to make transforms and proccess this sources of data easily',
-    py_modules=["SurveyHumpbackWhale"],
+    packages=find_packages()
     )
 

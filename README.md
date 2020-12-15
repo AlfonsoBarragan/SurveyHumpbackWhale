@@ -6,9 +6,9 @@
 ![Last release](https://img.shields.io/badge/Last%20release-discretizationOcean-006ede)
 [![Package status](https://img.shields.io/badge/Package%20status-up%20to%20date!-blue)](https://pypi.org/project/pandas/)
 ![Package version](https://img.shields.io/badge/pypi-v1.0.0-brightgreen)
-![Last commit](https://img.shields.io/github/last-commit/AlfonsoBarragan/Techdeck)
+![Last commit](https://img.shields.io/github/last-commit/AlfonsoBarragan/SurveyHumpbackWhale)
 ![Coverage](https://img.shields.io/badge/Coverage-0%25-red)
-[![License](https://img.shields.io/badge/License-GPL-brightgreen)](https://github.com/pandas-dev/pandas/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/License-GNU-brightgreen)](https://github.com/pandas-dev/pandas/blob/master/LICENSE)
 
 
 A simple survey data analysis library for python language.
